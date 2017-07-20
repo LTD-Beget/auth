@@ -1,0 +1,20 @@
+syntax = 'proto3';
+
+package beget.auth.v1.key;
+
+import "google/api/annotations.proto";
+
+service KeyService {
+    rpc getKey (GetKeyRequest) returns (GetKeyResponse) {
+        option (google.api.http) = {
+			get: "/v1/auth/key"
+		};
+    }
+}
+
+message GetKeyRequest {
+}
+
+message GetKeyResponse {
+    string key = 1;
+}

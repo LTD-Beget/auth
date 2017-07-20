@@ -1,0 +1,122 @@
+syntax = 'proto3';
+
+package beget.auth.v1.auth;
+
+import "google/api/annotations.proto";
+
+service AuthService {
+    // Запрос авторизации пользователя.
+    rpc auth (AuthRequest) returns (AuthResponse) {
+        option (google.api.http) = {
+			post: "/v1/auth"
+			body: "*"
+		};
+    }
+
+    // Запрос обновления токена. Обязательно наличие токена в заголовках в виде Authorization: BEARER {JWT}
+    rpc refreshToken (RefreshTokenRequest) returns (RefreshTokenResponse) {
+        option (google.api.http) = {
+			post: "/v1/auth/refresh"
+		};
+    }
+
+    // Переключение пользователя. Обязательно наличие токена в заголовках в виде Authorization: BEARER {JWT}
+    rpc switchUser (SwitchUserRequest) returns (SwitchUserResponse) {
+        option (google.api.http) = {
+			post: "/v1/auth/switch"
+			body: "*"
+		};
+    }
+
+    // Выход пользователя. Обязательно наличие токена в заголовках в виде Authorization: BEARER {JWT}
+    rpc logout (LogoutRequest) returns (LogoutResponse) {
+        option (google.api.http) = {
+			post: "/v1/auth/logout"
+		};
+    }
+}
+
+message AuthRequest {
+    string login = 1;
+    string password = 2;
+    string code = 3; // 2FA код если требуется.
+    bool saveMe = 4; // Выдача долгого токена.
+}
+
+message AuthResponse {
+    oneof response {
+        string token = 1;
+        ErrorStatus error = 2;
+    }
+
+    enum ErrorStatus {
+        INTERNAL_ERROR = 0; // Вернулась неожиданная ошибка при обработке (упал phportal и т.д)
+        EMPTY_LOGIN = 1; // Не заполнены обязательные поля для входа.
+        EMPTY_PASSWORD = 2; // Не заполнены обязательные поля для входа.
+        INCORRECT_CREDENTIALS = 3; // Не верно указан логин или пароль.
+        IP_BLOCKED = 4; // Доступ с Вашего IP-адреса запрещен.
+        CODE_REQUIRED = 5; // Требуется дополнительно ввести код безопасности, отправленный по SMS
+        INCORRECT_CODE = 6; // Неверный код двухфакторной аутентификации
+        CODE_SENT_LIMIT = 7; // Превышен лимит отправки сообщений с кодом доступа для этого аккаунта.
+        CODE_INPUT_LIMIT = 8; // Превышено количество попыток ввода кода.
+        ACCOUNT_ON_MAINTANCE = 9; // Временные работы, доступ запрещен
+        ACCOUNT_DELETED = 10; // Аккаунт удален
+        CODE_REQUIRED_EMAIL = 11; // Требуется дополнительно ввести код безопасности отправленный по email
+        CODE_REQUIRED_SMS = 12; // Требуется дополнительно ввести код безопасности отправленный по sms
+    }
+}
+
+message SwitchUserRequest {
+    string login = 1;
+    string password = 2;
+    string code = 3; // 2FA код если требуется.
+}
+
+message SwitchUserResponse {
+    oneof response {
+        string token = 1;
+        ErrorStatus error = 2;
+    }
+
+    enum ErrorStatus {
+        INTERNAL_ERROR = 0; // Вернулась неожиданная ошибка при обработке (упал phportal и т.д)
+        EMPTY_TARGET_LOGIN = 1; // Пустой логин для перехода.
+        TARGET_FORBIDDEN = 2; // Переход на аккаунт запрещен
+        TARGET_NOT_FOUND = 3; // Аккаунт не существует
+        TARGET_PASSWORD_REQUIRED = 4; // Требуется пароль
+        TARGET_CODE_REQUIRED = 5; // Требуется дополнительно ввести код безопасности
+        TARGET_INCORRECT_CODE = 6; // Неверный код двухфакторной аутентификации
+        SENT_LIMIT_REACHED = 7; // Превышен лимит отправки сообщений с кодом доступа для этого аккаунта.
+        INPUT_LIMIT_REACHED = 8; // Превышено количество попыток ввода кода.
+        TARGET_ON_MAINTENANCE = 9; // Временные работы, доступ запрещен
+        TARGET_DELETED = 10; // Аккаунт удален
+        TOKEN_REVOKED = 11; // Токен был отозван
+        CODE_REQUIRED_EMAIL = 12; // Требуется дополнительно ввести код безопасности отправленный по email
+        CODE_REQUIRED_SMS = 13; // Требуется дополнительно ввести код безопасности отправленный по sms
+    }
+}
+
+message RefreshTokenRequest {
+}
+
+message RefreshTokenResponse {
+    oneof response {
+        string token = 1;
+        ErrorStatus error = 2;
+    }
+
+    enum ErrorStatus {
+        INTERNAL_ERROR = 0; // Вернулась неожиданная ошибка при обработке (упал phportal и т.д)
+        PAYLOAD_CHANGED = 1; // Неверный токен
+        IP_BLOCKED = 2; // Доступ с Вашего IP-адреса запрещен.
+        ACCOUNT_ON_MAINTANCE = 3; // Временные работы, доступ запрещен
+        ACCOUNT_DELETED = 4; // Аккаунт удален
+        TOKEN_REVOKED = 5; // Токен был отозван
+    }
+}
+
+message LogoutRequest {
+}
+
+message LogoutResponse {
+}
