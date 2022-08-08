@@ -5,6 +5,7 @@ package beget.auth.v1.key;
 import "google/api/annotations.proto";
 
 service KeyService {
+    // Получить публичный ключ
     rpc getKey (GetKeyRequest) returns (GetKeyResponse) {
         option (google.api.http) = {
 			get: "/v1/auth/key"
@@ -16,5 +17,6 @@ message GetKeyRequest {
 }
 
 message GetKeyResponse {
+    // Публичный ключ
     string key = 1;
 }
