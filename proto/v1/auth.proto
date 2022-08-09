@@ -4,6 +4,7 @@ package beget.auth.v1.auth;
 
 import "google/api/annotations.proto";
 
+// Сервис аутентификации, выдает JWT токены для доступа к cp.beget.com/api.beget.com
 service AuthService {
     // Получить JWT токен
     rpc auth (AuthRequest) returns (AuthResponse) {
@@ -55,7 +56,7 @@ message AuthResponse {
         // JWT токен
         string token = 1;
 
-        // Ошибка авторизации
+        // Ошибка аутентификации
         ErrorStatus error = 2;
     }
 
