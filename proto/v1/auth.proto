@@ -4,10 +4,21 @@ package beget.auth.v1.auth;
 
 import "google/api/annotations.proto";
 
-// Сервис аутентификации, выдает JWT токены для доступа к cp.beget.com/api.beget.com
+// Аутентификация
+//
+// Сервис предоставляет набор методов для работы с токеном аутентификации, используемом для
+// доступа в панель управления и к API: cp.beget.com и api.beget.com
 service AuthService {
     // Получить JWT токен
-    rpc auth (AuthRequest) returns (AuthResponse) {
+    //
+    // Выполняет вход в аккаунт и выдает JWT токен, который далее может быть использован для аутентификации запросов в API.
+    //
+    // При отключенной двухфакторной аутентификации (2FA) поле `code` не используется и не должно передаваться в запросе.
+    //
+    // При включенной двухфакторной аутентификации (2FA) первоначальный запрос к данному методу вернет ошибку с кодом
+    // `CODE_REQUIRED_EMAIL` или `CODE_REQUIRED_SMS`, а на соответствующий адрес 2FA придет код. Для получения токена
+    // необходимо выполнить повторный запрос этого же метода, добавив к уже введенным данным полученный код в поле `code`.
+    rpc auth(AuthRequest) returns (AuthResponse) {
         option (google.api.http) = {
 			post: "/v1/auth"
 			body: "*"
@@ -15,22 +26,35 @@ service AuthService {
     }
 
     // Обновить JWT токен
-    rpc refreshToken (RefreshTokenRequest) returns (RefreshTokenResponse) {
+    //
+    // Продлевает действие текущего JWT токена.
+    rpc refreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
         option (google.api.http) = {
 			post: "/v1/auth/refresh"
 		};
     }
 
     // Получить JWT токен подчиненного аккаунта
-    rpc switchUser (SwitchUserRequest) returns (SwitchUserResponse) {
+    //
+    // Выполняет вход в аккаунт, входящий в группу мульти-аккаунтов, и выдает для него JWT токен,
+    // который далее может быть использован для аутентификации запросов в API.
+    //
+    // При отключенной двухфакторной аутентификации (2FA) на подчиненном аккаунте поле `code` не используется
+    // и не должно передаваться в запросе.
+    //
+    // При включенной двухфакторной аутентификации (2FA) на подчиненном аккаунте, поле `code` действует таким же
+    // образом, как одноименное поле в методе "Получить JWT токен" из API "Аутентификация".
+    rpc switchUser(SwitchUserRequest) returns (SwitchUserResponse) {
         option (google.api.http) = {
 			post: "/v1/auth/switch"
 			body: "*"
 		};
     }
 
-    // Отозвать JWT токен(logout)
-    rpc logout (LogoutRequest) returns (LogoutResponse) {
+    // Отозвать JWT токен
+    //
+    // Отзывает JWT токен, делая его невалидным для дальнейших запросов.
+    rpc logout(LogoutRequest) returns (LogoutResponse) {
         option (google.api.http) = {
 			post: "/v1/auth/logout"
 		};
@@ -44,7 +68,7 @@ message AuthRequest {
     // Пароль
     string password = 2;
 
-    // Код двухфакторной аутентификации
+    // Код двухфакторной аутентификации (необязательное поле, см. описание метода)
     string code = 3;
 
     // Выдать токен на 1 год
@@ -52,14 +76,14 @@ message AuthRequest {
 }
 
 message AuthResponse {
+    // Результат запроса
     oneof response {
-        // JWT токен
+        // Результат запроса: JWT токен
         string token = 1;
 
-        // Ошибка аутентификации
+        // Результат запроса: ошибка аутентификации
         ErrorStatus error = 2;
     }
-
 
     enum ErrorStatus {
         // Внутрення ошибка
@@ -110,16 +134,17 @@ message SwitchUserRequest {
     // Пароль
     string password = 2;
 
-    // Код двухфакторной аутентификации
+    // Код двухфакторной аутентификации (необязательное поле, см. описание метода)
     string code = 3;
 }
 
 message SwitchUserResponse {
+    // Результат запроса
     oneof response {
-        // JWT Токен
+        // Результат запроса: JWT Токен
         string token = 1;
 
-        // Ошибка при получении токена
+        // Результат запроса: ошибка при получении токена
         ErrorStatus error = 2;
     }
 
@@ -175,11 +200,12 @@ message RefreshTokenRequest {
 }
 
 message RefreshTokenResponse {
+    // Результат запроса
     oneof response {
-        // JWT Токен
+        // Результат запроса: JWT Токен
         string token = 1;
 
-        // Ошибка при обновлении токена
+        // Результат запроса: ошибка при обновлении токена
         ErrorStatus error = 2;
     }
 
