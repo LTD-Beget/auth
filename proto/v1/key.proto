@@ -4,9 +4,15 @@ package beget.auth.v1.key;
 
 import "google/api/annotations.proto";
 
+// Публичный ключ
+//
+// Сервис предоставляет метод для получения публичной части ключа, используемого для подписи JWT данного API.
 service KeyService {
     // Получить публичный ключ
-    rpc getKey (GetKeyRequest) returns (GetKeyResponse) {
+    //
+    // Возвращает публичный ключ, который может быть использован для проверки валидности подписи JWT,
+    // полученного в методах из API "Аутентификация".
+    rpc getKey(GetKeyRequest) returns (GetKeyResponse) {
         option (google.api.http) = {
 			get: "/v1/auth/key"
 		};
