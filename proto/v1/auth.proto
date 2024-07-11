@@ -124,6 +124,9 @@ message AuthResponse {
 
         // Требуется дополнительно ввести код безопасности отправленный по sms
         CODE_REQUIRED_SMS = 12;
+
+        // Пароль устарел
+        EXPIRED_PASSWORD = 13;
     }
 }
 
