@@ -16,13 +16,14 @@ service AuthService {
     // При отключенной двухфакторной аутентификации (2FA) поле `code` не используется и не должно передаваться в запросе.
     //
     // При включенной двухфакторной аутентификации (2FA) первоначальный запрос к данному методу вернет ошибку с кодом
-    // `CODE_REQUIRED_EMAIL` или `CODE_REQUIRED_SMS`, а на соответствующий адрес 2FA придет код. Для получения токена
-    // необходимо выполнить повторный запрос этого же метода, добавив к уже введенным данным полученный код в поле `code`.
+    // `CODE_REQUIRED_EMAIL`, `CODE_REQUIRED_SMS` или `CODE_REQUIRED_TOTP`. Для продолжения необходимо получить код по
+    // указанному каналу. Далее, для получения токена необходимо выполнить повторный запрос этого же метода,
+    // добавив к уже введенным данным полученный код в поле `code`.
     rpc auth(AuthRequest) returns (AuthResponse) {
         option (google.api.http) = {
-			post: "/v1/auth"
-			body: "*"
-		};
+            post: "/v1/auth"
+            body: "*"
+        };
     }
 
     // Обновить JWT токен
@@ -30,8 +31,8 @@ service AuthService {
     // Продлевает действие текущего JWT токена.
     rpc refreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
         option (google.api.http) = {
-			post: "/v1/auth/refresh"
-		};
+            post: "/v1/auth/refresh"
+        };
     }
 
     // Получить JWT токен подчиненного аккаунта
@@ -46,9 +47,9 @@ service AuthService {
     // образом, как одноименное поле в методе "Получить JWT токен" из API "Аутентификация".
     rpc switchUser(SwitchUserRequest) returns (SwitchUserResponse) {
         option (google.api.http) = {
-			post: "/v1/auth/switch"
-			body: "*"
-		};
+            post: "/v1/auth/switch"
+            body: "*"
+        };
     }
 
     // Отозвать JWT токен
@@ -56,8 +57,8 @@ service AuthService {
     // Отзывает JWT токен, делая его невалидным для дальнейших запросов.
     rpc logout(LogoutRequest) returns (LogoutResponse) {
         option (google.api.http) = {
-			post: "/v1/auth/logout"
-		};
+            post: "/v1/auth/logout"
+        };
     }
 }
 
@@ -127,6 +128,9 @@ message AuthResponse {
 
         // Пароль устарел
         EXPIRED_PASSWORD = 13;
+
+        // Требуется дополнительно ввести код безопасности из приложения-аутентификатора
+        CODE_REQUIRED_TOTP = 14;
     }
 }
 
@@ -196,6 +200,9 @@ message SwitchUserResponse {
 
         // Доступ с данного IP-адреса запрещен
         IP_BLOCKED = 14;
+
+        // Требуется дополнительно ввести код безопасности из приложения-аутентификатора
+        CODE_REQUIRED_TOTP = 15;
     }
 }
 

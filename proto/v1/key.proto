@@ -14,8 +14,8 @@ service KeyService {
     // полученного в методах из API "Аутентификация".
     rpc getKey(GetKeyRequest) returns (GetKeyResponse) {
         option (google.api.http) = {
-			get: "/v1/auth/key"
-		};
+            get: "/v1/auth/key"
+        };
     }
 }
 
