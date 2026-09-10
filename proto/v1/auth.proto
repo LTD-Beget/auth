@@ -19,6 +19,11 @@ service AuthService {
     // `CODE_REQUIRED_EMAIL`, `CODE_REQUIRED_SMS` или `CODE_REQUIRED_TOTP`. Для продолжения необходимо получить код по
     // указанному каналу. Далее, для получения токена необходимо выполнить повторный запрос этого же метода,
     // добавив к уже введенным данным полученный код в поле `code`.
+    //
+    // Если в запросе передано поле `oauth2` с полученным от Ory Hydra `login_challenge`, метод после успешной
+    // проверки тех же учетных данных и 2FA принимает OAuth2 login request и вместо JWT токена возвращает
+    // `oauth2.redirect_to` — URL, по которому браузер должен продолжить OAuth2 flow. Запрос без поля `oauth2`
+    // работает как прежде и выдает JWT токен. Одновременно `token` и `oauth2` не возвращаются.
     rpc auth(AuthRequest) returns (AuthResponse) {
         option (google.api.http) = {
             post: "/v1/auth"
@@ -73,7 +78,21 @@ message AuthRequest {
     string code = 3;
 
     // Выдать токен на 1 год
+    //
+    // В режиме OAuth2 (см. поле `oauth2`) означает создание запоминаемой сессии входа
+    // на стороне провайдера OAuth2, а не выдачу долгоживущего токена.
     bool saveMe = 4;
+
+    // Контекст OAuth2 login flow (необязательное поле, см. описание метода)
+    //
+    // Отсутствие поля сохраняет прежнее поведение метода: выдачу JWT токена.
+    OAuth2Context oauth2 = 5;
+}
+
+// Контекст OAuth2 login flow через Ory Hydra.
+message OAuth2Context {
+    // Временный login challenge, полученный браузером после редиректа Hydra.
+    string login_challenge = 1;
 }
 
 message AuthResponse {
@@ -84,6 +103,9 @@ message AuthResponse {
 
         // Результат запроса: ошибка аутентификации
         ErrorStatus error = 2;
+
+        // Результат запроса: OAuth2 login request принят, flow надо продолжить по URL
+        OAuth2Success oauth2 = 3;
     }
 
     enum ErrorStatus {
@@ -131,7 +153,22 @@ message AuthResponse {
 
         // Требуется дополнительно ввести код безопасности из приложения-аутентификатора
         CODE_REQUIRED_TOTP = 14;
+
+        // Пустой, неизвестный, истёкший или уже использованный login_challenge.
+        //
+        // Возвращается только для запроса с полем oauth2: продолжать вход по
+        // этому login_challenge нельзя, OAuth2 flow нужно начать заново.
+        INVALID_LOGIN_CHALLENGE = 15;
     }
+}
+
+// Результат успешной OAuth2-аутентификации.
+message OAuth2Success {
+    // URL Hydra, на который браузер должен выполнить полноценный переход.
+    //
+    // Содержит краткоживущий одноразовый verifier OAuth2 flow: значение является
+    // секретом, его нельзя логировать, сохранять или передавать третьим сторонам.
+    string redirect_to = 1;
 }
 
 message SwitchUserRequest {
