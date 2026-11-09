@@ -114,6 +114,10 @@ message AuthResponse {
         OAuth2Success oauth2 = 3;
     }
 
+    // Замаскированный адрес, на который отправлен код, например f***z@gmail.com или +7 ********59.
+    // Заполняется вместе с ошибками CODE_REQUIRED_EMAIL и CODE_REQUIRED_SMS, в остальных ответах пустой
+    string code_destination = 4;
+
     enum ErrorStatus {
         // Внутрення ошибка
         INTERNAL_ERROR = 0;
